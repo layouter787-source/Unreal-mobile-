@@ -15,10 +15,14 @@ android {
         versionName = "0.1.0"
     }
 
-    buildTypes {
-        release {
-            isMinifyEnabled = false
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
         }
+    }
+
+    buildTypes {
+        release { isMinifyEnabled = false }
     }
 
     compileOptions {
@@ -26,7 +30,5 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
-    }
+    kotlinOptions { jvmTarget = "17" }
 }
