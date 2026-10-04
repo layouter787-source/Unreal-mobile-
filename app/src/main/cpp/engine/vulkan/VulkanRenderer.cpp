@@ -39,6 +39,7 @@ bool VulkanRenderer::initialize(ANativeWindow* window) {
     }
 
     initialized_ = true;
+    swapchainDirty_ = false;
     return true;
 }
 
@@ -91,12 +92,18 @@ void VulkanRenderer::shutdown() {
 }
 
 void VulkanRenderer::resize(uint32_t width, uint32_t height) {
-    width_ = width;
-    height_ = height;
+    if (width == 0 || height == 0) return;
+    if (width_ != width || height_ != height) {
+        width_ = width;
+        height_ = height;
+        swapchainDirty_ = true;
+    }
 }
 
 void VulkanRenderer::renderFrame() {
     if (!initialized_ || device_ == VK_NULL_HANDLE || swapchain_ == VK_NULL_HANDLE) return;
+
+    if (swapchainDirty_ && !recreateSwapchain()) return;
 
     if (vkWaitForFences(device_, 1, &inFlightFence_, VK_TRUE, UINT64_MAX) != VK_SUCCESS)
         return;
@@ -105,6 +112,8 @@ void VulkanRenderer::renderFrame() {
         device_, swapchain_, UINT64_MAX, imageAvailableSemaphore_, VK_NULL_HANDLE, &imageIndex);
 
     if (acquire == VK_ERROR_OUT_OF_DATE_KHR || acquire == VK_SUBOPTIMAL_KHR) {
+        swapchainDirty_ = true;
+        recreateSwapchain();
         return;
     }
     if (acquire != VK_SUCCESS) return;
@@ -155,7 +164,58 @@ void VulkanRenderer::renderFrame() {
     present.swapchainCount = 1;
     present.pSwapchains = &swapchain_;
     present.pImageIndices = &imageIndex;
-    vkQueuePresentKHR(presentQueue_, &present);
+    VkResult presentResult = vkQueuePresentKHR(presentQueue_, &present);
+    if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR) {
+        swapchainDirty_ = true;
+    }
+}
+
+bool VulkanRenderer::recreateSwapchain() {
+    if (!initialized_ || device_ == VK_NULL_HANDLE || surface_ == VK_NULL_HANDLE) return false;
+    if (width_ == 0 || height_ == 0) return false;
+
+    if (vkDeviceWaitIdle(device_) != VK_SUCCESS) return false;
+
+    destroyFrameResources();
+    destroySwapchain();
+
+    if (!createSwapchain()) return false;
+    if (!createFrameResources()) {
+        destroyFrameResources();
+        destroySwapchain();
+        return false;
+    }
+
+    swapchainDirty_ = false;
+    return true;
+}
+
+void VulkanRenderer::destroyFrameResources() {
+    if (device_ == VK_NULL_HANDLE) return;
+
+    if (imageAvailableSemaphore_ != VK_NULL_HANDLE)
+        vkDestroySemaphore(device_, imageAvailableSemaphore_, nullptr);
+    if (renderFinishedSemaphore_ != VK_NULL_HANDLE)
+        vkDestroySemaphore(device_, renderFinishedSemaphore_, nullptr);
+    if (inFlightFence_ != VK_NULL_HANDLE)
+        vkDestroyFence(device_, inFlightFence_, nullptr);
+
+    imageAvailableSemaphore_ = VK_NULL_HANDLE;
+    renderFinishedSemaphore_ = VK_NULL_HANDLE;
+    inFlightFence_ = VK_NULL_HANDLE;
+
+    commandBuffers_.clear();
+
+    if (commandPool_ != VK_NULL_HANDLE) {
+        vkDestroyCommandPool(device_, commandPool_, nullptr);
+        commandPool_ = VK_NULL_HANDLE;
+    }
+
+    for (VkFramebuffer framebuffer : framebuffers_) {
+        if (framebuffer != VK_NULL_HANDLE)
+            vkDestroyFramebuffer(device_, framebuffer, nullptr);
+    }
+    framebuffers_.clear();
 }
 
 bool VulkanRenderer::createInstance() {
