@@ -25,6 +25,7 @@ private:
     bool createFrameResources();
     bool recreateSwapchain();
     void destroyFrameResources();
+    bool recreateInFlightFenceSignaled();
     void destroySwapchain();
     bool findQueueFamilies(uint32_t& graphicsFamily, uint32_t& presentFamily) const;
 
