@@ -56,7 +56,7 @@ Android app (Kotlin)
 - [x] Android/Kotlin/C++ scaffolding.
 - [x] Vulkan clear-and-present path (implementation present; device/build verification pending).
 - [x] Initial swapchain recreation logic.
-- [ ] Run GitHub Actions and fix actual build failures.
+- [ ] Run GitHub Actions and inspect the new build result.
 - [ ] Audit Vulkan failure cleanup and surface lifecycle.
 - [ ] Add logging with actionable VkResult messages.
 
@@ -110,10 +110,20 @@ Android app (Kotlin)
 - Additional header declaration commit: `3fe75569f677324c33785b3b995a5dd63adbc75b`.
 - Earlier native renderer bridge and Actions commits are present in repository history.
 - **Verification:** no successful Android CI result has been confirmed in this handoff. Treat compilation and runtime as unverified until an actual workflow/device result is inspected.
-- **Immediate next task:** run/inspect debug CI, then implement the smallest real graphics pipeline and draw a triangle. Do not jump to cube/camera until triangle rendering builds and is verified.
+- **Immediate next task:** inspect the next Android CI run. If it reaches Gradle successfully, fix the first actual Android/CMake/Vulkan compile error; if green, proceed to shader/pipeline + triangle.
 - **Agent handoff:** `CLAUDE.md` now makes README updates, verification honesty, SHA inspection and concrete next-task documentation mandatory for every agent.
 
 ## Change log
+
+### 2026-10-04 — Android CI Gradle bootstrap
+- Confirmed the repository has no Gradle Wrapper files.
+- Updated both GitHub Actions workflows to install Gradle 8.9 explicitly through `gradle/actions/setup-gradle` and then invoke `gradle --no-daemon`.
+- This removes the previous dependency on an unspecified `gradle` executable already being present on the runner.
+- Files: `.github/workflows/android-ci.yml`, `.github/workflows/android-release.yml`.
+- Commits: `2bd47a62ddf432abfab437b627c39e1e2118031a`, `1193219717802693abcd26ca41485124fc56d073`.
+- Verification: workflow files updated; a new CI result has not yet been inspected, so build success remains unverified.
+- Reference: GitHub's Gradle workflow guidance recommends setting up Gradle and executing builds with the Gradle Wrapper; this repository currently lacks the wrapper, so explicit Gradle installation is the interim solution. citeturn0search1
+- Next agent: inspect the next Android CI run and address the first real build error rather than guessing.
 
 ### 2026-10-04 — Vulkan fence recovery
 - Moved fence reset until command recording succeeds and added recovery that recreates the fence in a signaled state when fence reset/submission fails, preventing a future frame from waiting forever.
