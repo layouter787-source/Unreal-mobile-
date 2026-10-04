@@ -118,8 +118,6 @@ void VulkanRenderer::renderFrame() {
     }
     if (acquire != VK_SUCCESS) return;
 
-    vkResetFences(device_, 1, &inFlightFence_);
-
     VkCommandBuffer commandBuffer = commandBuffers_[imageIndex];
     vkResetCommandBuffer(commandBuffer, 0);
 
@@ -144,6 +142,11 @@ void VulkanRenderer::renderFrame() {
 
     if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) return;
 
+    if (vkResetFences(device_, 1, &inFlightFence_) != VK_SUCCESS) {
+        recreateInFlightFenceSignaled();
+        return;
+    }
+
     VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
     VkSubmitInfo submit{};
     submit.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -155,7 +158,10 @@ void VulkanRenderer::renderFrame() {
     submit.signalSemaphoreCount = 1;
     submit.pSignalSemaphores = &renderFinishedSemaphore_;
 
-    if (vkQueueSubmit(graphicsQueue_, 1, &submit, inFlightFence_) != VK_SUCCESS) return;
+    if (vkQueueSubmit(graphicsQueue_, 1, &submit, inFlightFence_) != VK_SUCCESS) {
+        recreateInFlightFenceSignaled();
+        return;
+    }
 
     VkPresentInfoKHR present{};
     present.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -188,6 +194,20 @@ bool VulkanRenderer::recreateSwapchain() {
 
     swapchainDirty_ = false;
     return true;
+}
+
+bool VulkanRenderer::recreateInFlightFenceSignaled() {
+    if (device_ == VK_NULL_HANDLE) return false;
+
+    if (inFlightFence_ != VK_NULL_HANDLE) {
+        vkDestroyFence(device_, inFlightFence_, nullptr);
+        inFlightFence_ = VK_NULL_HANDLE;
+    }
+
+    VkFenceCreateInfo fence{};
+    fence.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+    fence.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+    return vkCreateFence(device_, &fence, nullptr, &inFlightFence_) == VK_SUCCESS;
 }
 
 void VulkanRenderer::destroyFrameResources() {
