@@ -100,8 +100,6 @@ void VulkanRenderer::renderFrame() {
 
     if (vkWaitForFences(device_, 1, &inFlightFence_, VK_TRUE, UINT64_MAX) != VK_SUCCESS)
         return;
-    vkResetFences(device_, 1, &inFlightFence_);
-
     uint32_t imageIndex = 0;
     VkResult acquire = vkAcquireNextImageKHR(
         device_, swapchain_, UINT64_MAX, imageAvailableSemaphore_, VK_NULL_HANDLE, &imageIndex);
@@ -110,6 +108,8 @@ void VulkanRenderer::renderFrame() {
         return;
     }
     if (acquire != VK_SUCCESS) return;
+
+    vkResetFences(device_, 1, &inFlightFence_);
 
     VkCommandBuffer commandBuffer = commandBuffers_[imageIndex];
     vkResetCommandBuffer(commandBuffer, 0);
@@ -317,7 +317,12 @@ bool VulkanRenderer::createSwapchain() {
     info.imageArrayLayers = 1;
     info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     info.preTransform = caps.currentTransform;
-    info.compositeAlpha = VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR;
+    if (caps.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR)
+        info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+    else if (caps.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR)
+        info.compositeAlpha = VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR;
+    else
+        return false;
     info.presentMode = choosePresentMode(modes);
     info.clipped = VK_TRUE;
 
