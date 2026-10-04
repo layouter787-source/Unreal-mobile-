@@ -23,12 +23,15 @@ private:
     bool createSwapchain();
     bool createRenderPass();
     bool createFrameResources();
+    bool recreateSwapchain();
+    void destroyFrameResources();
     void destroySwapchain();
     bool findQueueFamilies(uint32_t& graphicsFamily, uint32_t& presentFamily) const;
 
     bool initialized_ = false;
     uint32_t width_ = 0;
     uint32_t height_ = 0;
+    bool swapchainDirty_ = false;
     uint32_t graphicsQueueFamily_ = UINT32_MAX;
     uint32_t presentQueueFamily_ = UINT32_MAX;
 
