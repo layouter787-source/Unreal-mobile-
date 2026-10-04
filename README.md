@@ -110,10 +110,16 @@ Android app (Kotlin)
 - Additional header declaration commit: `3fe75569f677324c33785b3b995a5dd63adbc75b`.
 - Earlier native renderer bridge and Actions commits are present in repository history.
 - **Verification:** no successful Android CI result has been confirmed in this handoff. Treat compilation and runtime as unverified until an actual workflow/device result is inspected.
-- **Immediate next task:** inspect and harden Vulkan lifecycle/recreation, run the debug CI, then implement the smallest real graphics pipeline and draw a triangle. Do not jump to cube/camera until triangle rendering builds and is verified.
+- **Immediate next task:** run/inspect debug CI, then implement the smallest real graphics pipeline and draw a triangle. Do not jump to cube/camera until triangle rendering builds and is verified.
 - **Agent handoff:** `CLAUDE.md` now makes README updates, verification honesty, SHA inspection and concrete next-task documentation mandatory for every agent.
 
 ## Change log
+
+### 2026-10-04 — Vulkan fence recovery
+- Moved fence reset until command recording succeeds and added recovery that recreates the fence in a signaled state when fence reset/submission fails, preventing a future frame from waiting forever.
+- Files: `app/src/main/cpp/engine/vulkan/VulkanRenderer.h`, `app/src/main/cpp/engine/vulkan/VulkanRenderer.cpp`.
+- Commits: `6f24b0f07464d709433fdd82a86695d2a347c494`, `553928fd7de044358db366bfb9c1bdc9d5f5ff95`.
+- Verification: no Android build/runtime test executed in this environment; pending CI/device verification.
 
 ### 2026-10-04 — Persistent handoff and collaboration rules
 - Added `CLAUDE.md` with mandatory instructions for Claude/other agents to read the README, inspect current SHAs, document every meaningful change, and never claim unverified builds/tests.
