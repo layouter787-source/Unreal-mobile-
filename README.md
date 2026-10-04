@@ -4,7 +4,7 @@
 
 ## Current status (living handoff)
 
-**Current stage:** native Android + Vulkan presentation foundation.
+**Current stage:** native Android + Vulkan presentation foundation, with persistent multi-agent handoff rules.
 
 Implemented in repository:
 - Android Gradle/Kotlin application scaffold (Java 17, compile/target SDK 35, min SDK 26).
@@ -100,6 +100,7 @@ Android app (Kotlin)
 - `app/src/main/cpp/engine/Engine.h/.cpp` — engine façade.
 - `app/src/main/cpp/engine/vulkan/VulkanRenderer.h/.cpp` — Vulkan presentation foundation.
 - `app/src/main/cpp/CMakeLists.txt` — native build definition.
+- `CLAUDE.md` — mandatory continuation/handoff instructions for Claude and other coding agents.
 - `.github/workflows/android-ci.yml` — debug build workflow on push/PR/manual dispatch.
 - `.github/workflows/android-release.yml` — manually triggered release build workflow.
 
@@ -109,9 +110,15 @@ Android app (Kotlin)
 - Additional header declaration commit: `3fe75569f677324c33785b3b995a5dd63adbc75b`.
 - Earlier native renderer bridge and Actions commits are present in repository history.
 - **Verification:** no successful Android CI result has been confirmed in this handoff. Treat compilation and runtime as unverified until an actual workflow/device result is inspected.
-- **Immediate next task:** inspect and fix the Vulkan swapchain recreation/lifecycle code, run the debug CI, then implement the smallest real graphics pipeline and draw a triangle. Do not jump to cube/camera until triangle rendering builds and is verified.
+- **Immediate next task:** inspect and harden Vulkan lifecycle/recreation, run the debug CI, then implement the smallest real graphics pipeline and draw a triangle. Do not jump to cube/camera until triangle rendering builds and is verified.
+- **Agent handoff:** `CLAUDE.md` now makes README updates, verification honesty, SHA inspection and concrete next-task documentation mandatory for every agent.
 
 ## Change log
+
+### 2026-10-04 — Persistent handoff and collaboration rules
+- Added `CLAUDE.md` with mandatory instructions for Claude/other agents to read the README, inspect current SHAs, document every meaningful change, and never claim unverified builds/tests.
+- Files: `CLAUDE.md`, `README.md`.
+- Verification: documentation-only change; no build/test run performed.
 
 ### 2026-10-04 — Persistent handoff and collaboration rules
 - Documented actual implementation state, limitations, ordered roadmap, verification policy and collaboration protocol for Cloud/Claude and future agents.
